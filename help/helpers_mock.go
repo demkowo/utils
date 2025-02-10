@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	model "github.com/demkowo/utils/models"
 	"github.com/demkowo/utils/resp"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -37,7 +37,7 @@ func (v *hMock) Get() *hMock {
 	return v
 }
 
-func (h *hMock) AddJWTToken(acc *model.Account) (string, *resp.Err) {
+func (h *hMock) AddJWTToken(claims jwt.MapClaims) (string, *resp.Err) {
 	err := Var.Get().Error["AddJWTToken"]
 
 	if err != nil {

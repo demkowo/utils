@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/demkowo/utils/config"
-	model "github.com/demkowo/utils/models"
 	"github.com/demkowo/utils/resp"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
@@ -33,7 +32,7 @@ func StopMock() {
 }
 
 type HInterface interface {
-	AddJWTToken(*model.Account) (string, *resp.Err)
+	AddJWTToken(jwt.MapClaims) (string, *resp.Err)
 	BindJSON(*gin.Context, interface{}) bool
 	GetRandomBytes(int) ([]byte, *resp.Err)
 	HashPassword(string) (string, *resp.Err)
@@ -44,19 +43,7 @@ type HInterface interface {
 type h struct {
 }
 
-func (h *h) AddJWTToken(acc *model.Account) (string, *resp.Err) {
-	roleNames := make([]string, len(acc.Roles))
-	for i, role := range acc.Roles {
-		roleNames[i] = role.Name
-	}
-
-	expirationTime := time.Now().Add(24 * time.Hour)
-	claims := jwt.MapClaims{
-		"id":       acc.Id.String(),
-		"nickname": acc.Nickname,
-		"exp":      expirationTime.Unix(),
-		"roles":    roleNames,
-	}
+func (h *h) AddJWTToken(claims jwt.MapClaims) (string, *resp.Err) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	tokenString, err := token.SignedString(conf.JWTSecret)

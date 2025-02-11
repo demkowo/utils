@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/demkowo/utils/config"
 	"github.com/demkowo/utils/resp"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
@@ -16,9 +15,8 @@ import (
 )
 
 var (
-	H    HInterface   = &h{}
-	Var  VarInterface = &hMock{}
-	conf              = config.Values.Get()
+	H   HInterface   = &h{}
+	Var VarInterface = &hMock{}
 )
 
 func StartMock() {
@@ -32,26 +30,15 @@ func StopMock() {
 }
 
 type HInterface interface {
-	AddJWTToken(jwt.MapClaims) (string, *resp.Err)
 	BindJSON(*gin.Context, interface{}) bool
 	GetRandomBytes(int) ([]byte, *resp.Err)
 	HashPassword(string) (string, *resp.Err)
 	ParseTime(*gin.Context, string, string, *time.Time) bool
 	ParseUUID(*gin.Context, string, string, *uuid.UUID) bool
+	TokenSignedString(*jwt.Token, []byte) (string, error)
 }
 
 type h struct {
-}
-
-func (h *h) AddJWTToken(claims jwt.MapClaims) (string, *resp.Err) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	tokenString, err := token.SignedString(conf.JWTSecret)
-	if err != nil {
-		log.Println("failed to sign JWT token:", err)
-		return "", resp.Error(http.StatusInternalServerError, "failed to create token", []interface{}{err})
-	}
-	return tokenString, nil
 }
 
 func (h *h) BindJSON(c *gin.Context, jsonToBind interface{}) bool {
@@ -103,4 +90,9 @@ func (h *h) ParseUUID(c *gin.Context, jsonField string, txtToParse string, dest 
 
 	*dest = parsedID
 	return true
+}
+
+func (h *h) TokenSignedString(token *jwt.Token, secret []byte) (string, error) {
+	fmt.Println("help TokenSignedString")
+	return token.SignedString(secret)
 }

@@ -37,16 +37,6 @@ func (v *hMock) Get() *hMock {
 	return v
 }
 
-func (h *hMock) AddJWTToken(claims jwt.MapClaims) (string, *resp.Err) {
-	err := Var.Get().Error["AddJWTToken"]
-
-	if err != nil {
-		return "", resp.Error(http.StatusInternalServerError, "failed to create token", []interface{}{err.Error()})
-	}
-
-	return "validTokenString", nil
-}
-
 func (h *hMock) BindJSON(c *gin.Context, jsonToBind interface{}) bool {
 	if err := c.ShouldBindJSON(&jsonToBind); err != nil {
 		log.Printf("invalid JSON data: %s", err.Error())
@@ -111,4 +101,11 @@ func (h *hMock) ParseUUID(c *gin.Context, jsonField string, txtToParse string, d
 
 	*dest = parsedID
 	return true
+}
+
+func (h *hMock) TokenSignedString(token *jwt.Token, secret []byte) (string, error) {
+	if Var.Get().Error["TokenSignedString"] != nil {
+		return "", Var.Get().Error["TokenSignedString"]
+	}
+	return token.SignedString(secret)
 }

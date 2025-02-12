@@ -90,7 +90,7 @@ func (hm *helperMock) ParseUUID(c *gin.Context, jsonFieldName string, idTxtToPar
 		return false
 	}
 
-	parsedID, err := uuid.Parse(c.Param(idTxtToParse))
+	parsedID, err := uuid.Parse(idTxtToParse)
 	if err != nil {
 		log.Printf("failed to parse %s: %v", jsonFieldName, err)
 		c.JSON(resp.Error(http.StatusBadRequest, fmt.Sprintf("invalid UUID: %s", jsonFieldName), []interface{}{err}).JSON())

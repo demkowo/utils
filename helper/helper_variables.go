@@ -7,8 +7,9 @@ var (
 
 type varInterface interface {
 	get() *helperMock
-	SetExpectedError(map[string]error)
-	SetMock(map[string]bool)
+	SetExpectedPassword(password string)
+	SetExpectedError(err map[string]error)
+	SetMock(mock map[string]bool)
 }
 
 func (v *helperMock) SetExpectedPassword(password string) {

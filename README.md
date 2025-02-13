@@ -1,10 +1,8 @@
 # utils
 
-This library provides:
-- **config**: Configuration management (e.g. loading environment variables into `conf`)
-- **resp**: Standardized responses (`Err` and `Ok` types with `.JSON()` methods)
-- **helpers (utils)**: Common functions for JWT token creation, password hashing, UUID/time parsing, and test mocks
-- **models**: Data structures (e.g. `Account`, `APIKey`) and validation logic
+This library provides two main packages:
+- **resp**: Standardized JSON responses (`Err` and `Ok` types with `.JSON()` methods)
+- **helper**: Common utility functions and their mocks (for tasks such as parsing JSON, generating random bytes, hashing passwords, parsing UUID/time, etc.)
 
 ## Installation
 
@@ -14,79 +12,108 @@ go get github.com/demkowo/utils
 
 ## Usage
 
-### Initialize config:
-```go
-import "github.com/demkowo/utils/config"
-
-func main() {
-    cfg := config.Values.Get()
-    // use cfg.JWTSecret, etc.
-}
-```
-
-### Responses:
+### Standardized Responses:
 ```go
 import "github.com/demkowo/utils/resp"
 
 // Error response
-errResp := resp.Error(500, "something went wrong", []interface{}{"cause details"})
-code, body := errResp.JSON()
+errResp := resp.Error(http.StatusInternalServerError, "Something went wrong", []interface{}{"cause details"})
+statusCode, body := errResp.JSON() 
+// Use statusCode as the HTTP status, body as the response JSON
 
 // OK response
-okResp := resp.New("success", []interface{}{"some", "data"})
-code, body := okResp.JSON()
+okResp := resp.New("Success message", []interface{}{"some", "data"})
+statusCode, body := okResp.JSON()
 ```
 
 ### Helpers:
 ```go
 import (
-    "github.com/demkowo/utils"
-    "github.com/demkowo/utils/models"
+    "github.com/gin-gonic/gin"
+    "github.com/demkowo/utils/helper"
 )
 
-func createToken() (string, error) {
-    account := &models.Account{ /* fields */ }
-    token, errResp := utils.H.AddJWTToken(account)
-    if errResp != nil {
-        return "", fmt.Errorf("error creating token: %v", errResp)
+// Create a new helper instance
+h := helper.NewHelper()
+
+// 2.1 Bind JSON
+func handleRequest(c *gin.Context) {
+    var requestBody struct {
+        // fields...
     }
-    return token, nil
+    if !h.BindJSON(c, &requestBody) {
+        return // JSON binding failed and the error response was already sent
+    }
+    // proceed with requestBody
+}
+
+// 2.2 Generate random bytes
+randomBytes, errResp := h.GetRandomBytes(16)
+if errResp != nil {
+    // handle error (errResp contains an error response with code, causes, etc.)
+}
+
+// 2.3 Hash a password
+hashed, errResp := h.HashPassword("somePassword123")
+if errResp != nil {
+    // handle error
+}
+
+// 2.4 Parse time
+var parsedTime time.Time
+if !h.ParseTime(c, time.RFC3339, "2021-09-11T09:00:00Z", &parsedTime) {
+    return // error response was already sent
+}
+
+// 2.5 Parse UUID
+var id uuid.UUID
+if !h.ParseUUID(c, "myID", "550e8400-e29b-41d4-a716-446655440000", &id) {
+    return // error response was already sent
+}
+
+// 2.6 Sign JWT tokens
+tokenString, signErr := h.TokenSignedString(jwtToken, []byte("someJWTSecret"))
+if signErr != nil {
+    // handle signing error
 }
 ```
 
 ### Testing with Mocks:
 ```go
-import "github.com/demkowo/utils"
+import (
+    "testing"
+    "github.com/demkowo/utils/helper"
+)
 
-func TestHelpersMock(t *testing.T) {
-    // Start mocks
-    utils.StartMock()
-    defer utils.StopMock()
+func TestSomething(t *testing.T) {
+    // Enable mocks
+    helper.StartMock()
+    defer helper.StopMock()
 
-    // Set expected error or password
-    utils.Var.SetExpectedError(map[string]error{"HashPassword": nil})
-    // ...
+    // Add a specific mock if needed
+    helper.AddMock(helper.Mock{
+        Test: "TestSomething",
+        Error: map[string]error{
+            "HashPassword": nil, // or an error to simulate failure
+        },
+        Password: "mockedHashedPassword",
+    })
+
+    // Now calls to helper.NewHelper().HashPassword will use the mock
 }
 ```
 
 ## Components
 
-`config`
-
-Manages environment-based configuration (JWTSecret), providing a global Values variable to retrieve settings.
-
 `resp`
 
-Encapsulates standard JSON responses with Err and Ok structures, each having a .JSON() method for consistent HTTP status, code, and message formatting.
+Defines two types (`Err` and `Ok`) with consistent `.JSON()` methods for returning HTTP status codes and JSON bodies.
 
-`helpers (utils)`
+`helper`
 
 Provides:
-- JWT token creation (`AddJWTToken`)
-- Binding & validation (`BindJSON`, `ParseTime`, `ParseUUID`)
+- Binding & validation (`BindJSON`)
 - Cryptographic helpers (`HashPassword`, `GetRandomBytes`)
-- Mock versions (`hMock`) for easy testing
-
-`models`
-
-Defines data structures (`Account`, `APIKey`, etc.) with built-in validation methods, focusing on common authentication/authorization fields and constraints.
+- Time and UUID parsing (`ParseTime`, `ParseUUID`)
+- JWT token signing (`TokenSignedString`)
+- Mock infrastructure (`StartMock`, `StopMock`, `AddMock`) for easy testing.

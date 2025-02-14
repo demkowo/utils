@@ -27,9 +27,11 @@ func Error(code int, err string, causes []interface{}) *Err {
 	}
 }
 
-func New(message string, data []interface{}) *Ok {
+func New(code int, message string, data []interface{}) *Ok {
 	return &Ok{
 		Message: message,
+		Code:    code,
+		Status:  http.StatusText(code),
 		Data:    data,
 	}
 }

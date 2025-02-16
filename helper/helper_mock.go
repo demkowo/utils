@@ -1,7 +1,7 @@
-// helper_mock.go
 package helper
 
 import (
+	"context"
 	"crypto/rand"
 	"fmt"
 	"log"
@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
+	"golang.org/x/oauth2"
 )
 
 var (
@@ -29,6 +30,7 @@ type Mock struct {
 	Error    map[string]error
 	IsMock   map[string]bool
 	Password string
+	Token    oauth2.Token
 }
 
 // AddMock allows to add variables to the mock when it's on
@@ -41,14 +43,14 @@ func AddMock(mock Mock) {
 		return
 	}
 
-	h, ok := helper.(*helperMock)
+	hm, ok := helper.(*helperMock)
 	if !ok {
 		log.Fatal("invalid type of helperMock")
 	}
 
-	h.mocks = make(map[string]Mock)
+	hm.mocks = make(map[string]Mock)
 
-	h.mocks[mock.Test] = mock
+	hm.mocks[mock.Test] = mock
 }
 
 // StartMock replaces the real helper with a new mock instance.
@@ -80,6 +82,19 @@ func (hm *helperMock) BindJSON(c *gin.Context, jsonToBind interface{}) bool {
 		return false
 	}
 	return true
+}
+
+func (hm *helperMock) Exchange(ctx context.Context, code string, cfg *oauth2.Config) (*oauth2.Token, error) {
+	mock, err := getMock(hm)
+	if err != nil {
+		return nil, err
+	}
+
+	if mock.Error["Exchange"] != nil {
+		return nil, mock.Error["Exchange"]
+	}
+
+	return &mock.Token, nil
 }
 
 func (hm *helperMock) GetRandomBytes(bytesNumber int) ([]byte, *resp.Err) {

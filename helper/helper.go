@@ -1,7 +1,7 @@
-// helper.go
 package helper
 
 import (
+	"context"
 	"crypto/rand"
 	"fmt"
 	"log"
@@ -13,6 +13,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
 )
 
 var (
@@ -23,6 +24,10 @@ type Helper interface {
 	// BindJSON calls c.ShouldBindJSON and returns false on error.
 	// For easy testing, call StartMock() before using BindJSON.
 	BindJSON(c *gin.Context, jsonToBind interface{}) bool
+
+	// Exchange exchanges an authorization code for an OAuth2 token using the given config.
+	// For easy testing, call StartMock() before using Exchange.
+	Exchange(ctx context.Context, code string, cfg *oauth2.Config) (*oauth2.Token, error)
 
 	// GetRandomBytes returns the specified number of random bytes.
 	// For easy testing, call StartMock() before using GetRandomBytes.
@@ -64,6 +69,10 @@ func (h *h) BindJSON(c *gin.Context, jsonToBind interface{}) bool {
 		return false
 	}
 	return true
+}
+
+func (h *h) Exchange(ctx context.Context, code string, cfg *oauth2.Config) (*oauth2.Token, error) {
+	return cfg.Exchange(ctx, code)
 }
 
 func (h *h) GetRandomBytes(bytesNumber int) ([]byte, *resp.Err) {

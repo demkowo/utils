@@ -21,7 +21,7 @@ type Route struct {
 	Active  bool      `json:"active"`
 }
 
-func RegisterRoutesWithRBAC(router *gin.Engine, service string) {
+func RegisterRoutesWithRBAC(router *gin.Engine, domain string, service string) {
 	routes := router.Routes()
 	var payload []Route
 
@@ -40,7 +40,7 @@ func RegisterRoutesWithRBAC(router *gin.Engine, service string) {
 
 		rbacURL := os.Getenv("RBAC_REGISTER_URL")
 		if rbacURL == "" {
-			rbacURL = fmt.Sprintf("http://rbac:5001/api/v1/routes/%s", service)
+			rbacURL = fmt.Sprintf("http://%s/api/v1/routes/%s", domain, service)
 		}
 
 		body, err := json.Marshal(payload)

@@ -3,6 +3,7 @@ package routes_register
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -39,7 +40,7 @@ func RegisterRoutesWithRBAC(router *gin.Engine, service string) {
 
 		rbacURL := os.Getenv("RBAC_REGISTER_URL")
 		if rbacURL == "" {
-			rbacURL = "http://rbac:5001/api/v1/routes"
+			rbacURL = fmt.Sprintf("http://rbac:5001/api/v1/routes/%s", service)
 		}
 
 		body, err := json.Marshal(payload)

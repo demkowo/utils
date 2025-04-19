@@ -8,7 +8,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func InitRedisClient(cfg Config) *redis.Client {
+// InitRedisClient tworzy połączenie z Redisem i zwraca obiekt RedisClient (interfejs)
+func InitRedisClient(cfg Config) RedisClient {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     cfg.RedisAddr,
 		Password: cfg.RedisPassword,
@@ -23,5 +24,5 @@ func InitRedisClient(cfg Config) *redis.Client {
 	}
 
 	log.Println("[INIT] Connected to Redis:", cfg.RedisAddr)
-	return rdb
+	return NewRedisClientWrapper(rdb)
 }

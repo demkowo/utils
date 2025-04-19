@@ -24,7 +24,6 @@ func NewServiceAuthMiddleware(redis RedisClient, bootstrapToken string) gin.Hand
 			return
 		}
 
-		// warunkowy bootstrap bypass tylko dla `auth`
 		if service == "auth" && bootstrapToken != "" {
 			bootstrap := c.GetHeader("X-Bootstrap-Token")
 			hasKey, err := redis.HasServiceKey("auth")
